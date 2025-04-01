@@ -1,4 +1,5 @@
 from task_classes import AddressBook, Record
+import pickle
 
 # decorator for exceptions
 def input_error(func):
@@ -15,8 +16,6 @@ def input_error(func):
             return 'Unknown command or parametrs, please try again.'
     return inner
 
-book = AddressBook()
-
 
 # function for greeting
 
@@ -25,7 +24,7 @@ def greeting():
 
 # add contact in dict and check the number of args
 @input_error
-def add_contact(*args):
+def add_contact(book, *args):
     name, phone, *_ = args
     record = book.find(name)
     message = "Contact updated."
@@ -38,19 +37,19 @@ def add_contact(*args):
     return message
     
 @input_error
-def add_phone(*args):
+def add_phone(book, *args):
     name, phone, *_ = args
     record = book.find(name)
     if record is None:
         message = "This contact isn`t in your addressbook."
-    if phone:
+    elif phone:
         record.add_phone(phone)
         message = f"Contact  {name} birthday is added."
     return message
 
 # check the number of args, change phone of contact 
 @input_error
-def change_contact(*args):
+def change_contact(book, *args):
     #if len(args) < 2:
     #    return 'Not enough arguments'
     name, old_phone, new_phone = args
@@ -64,7 +63,7 @@ def change_contact(*args):
 
 # check contacts existance and show contact information when contacts exist
 @input_error
-def show_phone(*args):
+def show_phone(book, *args):
     name, *_ = args
     record = book.find(name)
     if record is None:
@@ -74,22 +73,22 @@ def show_phone(*args):
     return message    
 
 
-def show_all():
+def show_all(book):
     return book
     
 @input_error
-def add_birthday(*args):
+def add_birthday(book, *args):
     name, birthday, *_ = args
     record = book.find(name)
     if record is None:
         message = "This contact isn`t in your addressbook."
-    if birthday:
+    elif birthday:
         record.add_birthday(birthday)
         message = f"Contact  {name} birthday is added."
     return message
 
 @input_error
-def show_birthday(*args):
+def show_birthday(book, *args):
     name, *_ = args
     record = book.find(name)
     if record is None:
@@ -99,7 +98,7 @@ def show_birthday(*args):
     return message    
 
 @input_error
-def birthdays():
+def birthdays(book):
     bith_list = book.get_upcoming_birthdays()
     if not bith_list:
         message = "None of the contacts have a birthday in the next 7 days."
@@ -107,6 +106,17 @@ def birthdays():
         message = f'\n'.join([f"Name: {item['name']}, Day for congratulations: {item['birthday'].strftime('%d.%m.%Y')}" for item in bith_list])
     return message   
 
+
+def save_data(book, filename="addressbook.pkl"):
+    with open(filename, "wb") as f:
+        pickle.dump(book, f)
+
+def load_data(filename="addressbook.pkl"):
+    try:
+        with open(filename, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return AddressBook()  # Повернення
     
 # dict with commands as keys and function as values    
 COMMAND_HANDLER = {
@@ -122,6 +132,7 @@ COMMAND_HANDLER = {
                    }
 
 
+@input_error
 def parse_input(user_input):
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
@@ -130,6 +141,7 @@ def parse_input(user_input):
 
 def main():
     #book = AddressBook()
+    book = load_data()
 
     print("Welcome to the assistant bot!")
     while True:
@@ -137,26 +149,19 @@ def main():
         command, *args = parse_input(user_input)
 
         if command in ["close", "exit", "quit"]:
+            save_data(book)
             print("Good bye!")
             break
         # there commands are turn into function calling
         elif command in COMMAND_HANDLER:
-            result = COMMAND_HANDLER.get(command)(*args)
+            result = COMMAND_HANDLER.get(command)(book, *args)
             print(result)
         
         else:
             print("Invalid command.")
 
 if __name__ == "__main__":
-    # john_rec = Record('John')
-    # jane_rec = Record('Jane')
-    # ou_rec = Record('Ou')
-    # book.add_record(john_rec)
-    # book.add_record(jane_rec)
-    # book.add_record(ou_rec)
-    # john_rec.add_birthday('25.03.1989')
-    # jane_rec.add_birthday('29.03.1999')
-    # ou_rec.add_birthday('30.03.1989')
-     main()
+    
+    main()
     
 

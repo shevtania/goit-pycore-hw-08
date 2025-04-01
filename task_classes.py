@@ -33,7 +33,7 @@ class Phone(Field):
         if len(value) == 10 and value.isdigit(): # checking
            self.value = value
         else:
-            raise ValueError
+            raise ValueError ("Phone number has wrong format")
  
     def __eq__(self, value: object) -> bool:
         return self.value == value
