@@ -140,7 +140,7 @@ def parse_input(user_input):
 
 
 def main():
-    #book = AddressBook()
+  
     book = load_data()
 
     print("Welcome to the assistant bot!")
